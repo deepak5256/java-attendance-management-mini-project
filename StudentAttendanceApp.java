@@ -17,9 +17,7 @@ import java.sql.*;
  * Instructions for Students:
  * 1. Ensure PostgreSQL is running on your computer.
  * 2. Update the DB credentials below (URL, USER, PASS) if needed.
- * 3. Run using 'compile_and_run.bat' or compile via command line:
- *      javac -cp ".;lib/*" StudentAttendanceApp.java
- *      java  -cp ".;lib/*" StudentAttendanceApp
+ * 3. Run using 'compile_and_run.bat' or in VS Code with lib/postgresql.jar referenced.
  */
 public class StudentAttendanceApp extends JFrame {
 
@@ -29,6 +27,25 @@ public class StudentAttendanceApp extends JFrame {
     private static final String URL  = "jdbc:postgresql://localhost:5432/postgres";
     private static final String USER = "postgres";
     private static final String PASS = "Admin123";
+
+    /**
+     * Establishes a database connection with explicit driver loading.
+     * Throws an informative error if the driver JAR is missing from the classpath.
+     */
+    private static Connection getConnection() throws SQLException {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException(
+                "PostgreSQL JDBC Driver (postgresql.jar) not found in Classpath!\n\n" +
+                "How to solve this:\n" +
+                "1. If running in VS Code: Check that '.vscode/settings.json' includes 'lib/**/*.jar',\n" +
+                "   OR right-click 'lib/postgresql.jar' -> 'Add to Referenced Libraries'.\n" +
+                "2. OR simply double-click 'compile_and_run.bat' from File Explorer."
+            );
+        }
+        return DriverManager.getConnection(URL, USER, PASS);
+    }
 
     // ==========================================================================
     // 2. GUI COMPONENTS
@@ -118,11 +135,11 @@ public class StudentAttendanceApp extends JFrame {
 
         lblCalcPercentage = new JLabel("80.00 %");
         lblCalcPercentage.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblCalcPercentage.setForeground(new Color(16, 185, 129));
+        lblCalcPercentage.setForeground(new Color(16, 125, 65));
 
         lblStatusBadge = new JLabel("Eligible");
         lblStatusBadge.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblStatusBadge.setForeground(new Color(16, 185, 129));
+        lblStatusBadge.setForeground(new Color(16, 125, 65));
 
         // Real-time calculation on key typed
         KeyAdapter calcAdapter = new KeyAdapter() {
@@ -208,12 +225,13 @@ public class StudentAttendanceApp extends JFrame {
         btnPanel.setBackground(new Color(248, 250, 252));
         btnPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(226, 232, 240)));
 
-        JButton btnInsert  = createButton("Insert / Save",  new Color(16, 185, 129));
-        JButton btnSearch  = createButton("Search by ID",  new Color(59, 130, 246));
-        JButton btnUpdate  = createButton("Update Record", new Color(245, 158, 11));
-        JButton btnDelete  = createButton("Delete Record", new Color(239, 68, 68));
-        JButton btnClear   = createButton("Clear Form",    new Color(100, 116, 139));
-        JButton btnRefresh = createButton("Reload Table",  new Color(79, 70, 229));
+        // Outlined buttons with high-contrast, perfectly visible text
+        JButton btnInsert  = createButton("Insert / Save",  new Color(16, 125, 65));  // Dark Green
+        JButton btnSearch  = createButton("Search by ID",  new Color(26, 86, 219));  // Dark Blue
+        JButton btnUpdate  = createButton("Update Record", new Color(180, 83, 9));   // Dark Amber
+        JButton btnDelete  = createButton("Delete Record", new Color(195, 34, 34));  // Dark Red
+        JButton btnClear   = createButton("Clear Form",    new Color(71, 85, 105));  // Slate
+        JButton btnRefresh = createButton("Reload Table",  new Color(79, 70, 229));  // Indigo
 
         btnInsert.addActionListener(e -> insertRecord());
         btnSearch.addActionListener(e -> searchRecord());
@@ -232,14 +250,17 @@ public class StudentAttendanceApp extends JFrame {
         return btnPanel;
     }
 
-    private JButton createButton(String text, Color bg) {
+    private JButton createButton(String text, Color accentColor) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(accentColor); // Crisp, high-contrast colored text
+        btn.setBackground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(7, 14, 7, 14));
+        btn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(accentColor, 1),
+                BorderFactory.createEmptyBorder(7, 14, 7, 14)
+        ));
         return btn;
     }
 
@@ -255,7 +276,7 @@ public class StudentAttendanceApp extends JFrame {
                      "attended_classes INT NOT NULL, " +
                      "total_classes INT NOT NULL DEFAULT 50, " +
                      "status VARCHAR(30) NOT NULL)";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
@@ -269,7 +290,7 @@ public class StudentAttendanceApp extends JFrame {
                      "(attendance_id, student_name, course_code, attended_classes, total_classes, status) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             if (txtId.getText().trim().isEmpty() || txtName.getText().trim().isEmpty()) {
@@ -312,7 +333,7 @@ public class StudentAttendanceApp extends JFrame {
     // SEARCH (READ)
     private void searchRecord() {
         String sql = "SELECT * FROM student_attendance WHERE attendance_id = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             String idStr = txtId.getText().trim();
@@ -358,7 +379,7 @@ public class StudentAttendanceApp extends JFrame {
                      "student_name = ?, course_code = ?, attended_classes = ?, total_classes = ?, status = ? " +
                      "WHERE attendance_id = ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             int id = Integer.parseInt(txtId.getText().trim());
@@ -396,7 +417,7 @@ public class StudentAttendanceApp extends JFrame {
     // DELETE
     private void deleteRecord() {
         String sql = "DELETE FROM student_attendance WHERE attendance_id = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             String idStr = txtId.getText().trim();
@@ -431,7 +452,7 @@ public class StudentAttendanceApp extends JFrame {
         String sql = "SELECT attendance_id, student_name, course_code, attended_classes, total_classes, status " +
                      "FROM student_attendance ORDER BY attendance_id ASC";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
@@ -467,12 +488,12 @@ public class StudentAttendanceApp extends JFrame {
                 lblCalcPercentage.setText(String.format("%.2f %%", pct));
                 if (pct >= 75.0) {
                     lblStatusBadge.setText("Eligible");
-                    lblStatusBadge.setForeground(new Color(16, 185, 129)); // Green
-                    lblCalcPercentage.setForeground(new Color(16, 185, 129));
+                    lblStatusBadge.setForeground(new Color(16, 125, 65)); // Green
+                    lblCalcPercentage.setForeground(new Color(16, 125, 65));
                 } else {
                     lblStatusBadge.setText("Attendance Shortage");
-                    lblStatusBadge.setForeground(new Color(220, 38, 38)); // Red
-                    lblCalcPercentage.setForeground(new Color(220, 38, 38));
+                    lblStatusBadge.setForeground(new Color(195, 34, 34)); // Red
+                    lblCalcPercentage.setForeground(new Color(195, 34, 34));
                 }
             }
         } catch (NumberFormatException ignored) {}
