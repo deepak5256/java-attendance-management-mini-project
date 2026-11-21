@@ -1,21 +1,18 @@
 @echo off
 REM ==============================================================================
-REM Java Mini-Project Reference: 1-Click Compile and Run Script (Windows CMD)
+REM Java Mini-Project Reference: 1-Click Compile and Run Script
 REM ==============================================================================
 
-echo [1/3] Creating output directory 'bin'...
-if not exist "bin" mkdir bin
-
-echo [2/3] Compiling Java source files...
-javac -cp ".;lib\*" -d bin src\config\*.java src\model\*.java src\dao\*.java src\ui\*.java src\Main.java
+echo [1/2] Compiling StudentAttendanceApp.java...
+javac -cp ".;lib\*" StudentAttendanceApp.java
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Compilation failed! Please check code or Java compiler.
+    echo [ERROR] Compilation failed! Please check your code.
     pause
     exit /b %ERRORLEVEL%
 )
 
-echo [3/3] Launching Student Attendance Management System...
-java -cp "bin;lib\*" Main
+echo [2/2] Launching Student Attendance Management System...
+java -cp ".;lib\*" StudentAttendanceApp
 
 pause

@@ -1,12 +1,11 @@
 # Student Attendance Management System
 ### Java Swing GUI & JDBC Database Application — Reference Mini-Project
 
-[![Java](https://img.shields.io/badge/Java-21%2B%20%2F%2017%20LTS-orange.svg)](https://www.oracle.com/java/)
+[![Java](https://img.shields.io/badge/Java-11%2B%20%2F%2017%20LTS%20%2F%2021%2B-orange.svg)](https://www.oracle.com/java/)
 [![GUI](https://img.shields.io/badge/GUI-Java%20Swing%20(javax.swing)-blue.svg)]()
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20MySQL-336791.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-A complete, production-ready desktop reference application developed for students. This project demonstrates best practices in building standalone Java desktop applications by integrating **Java Swing GUI (`javax.swing.*`)** with a relational database using **Java Database Connectivity (JDBC `java.sql.*`)**.
+A complete, beginner-friendly desktop reference mini-project. This project demonstrates how to build a standalone desktop database application combining **Java Swing GUI (`javax.swing.*`)** with relational database connectivity (**JDBC `java.sql.*`**).
 
 ---
 
@@ -16,300 +15,189 @@ A complete, production-ready desktop reference application developed for student
 
 ---
 
-## 📋 Table of Contents
-1. [Overview & Features](#-overview--features)
-2. [System Architecture](#-system-architecture)
-3. [Database Schema & ER Design](#-database-schema--er-design)
-4. [Project Directory Structure](#-project-directory-structure)
-5. [Cybersecurity & Defensive Engineering](#-cybersecurity--defensive-engineering)
-6. [Prerequisites & Requirements](#-prerequisites--requirements)
-7. [Step-by-Step Setup & Execution](#-step-by-step-setup--execution)
-8. [Component & Code Documentation](#-component--code-documentation)
-9. [Viva-Voce Questions with Model Answers](#-viva-voce-questions-with-model-answers)
-10. [Student Customization Checklist](#-student-customization-checklist)
+## 📁 Simple & Clean Project Structure
+
+This project is intentionally designed with a **single Java source file** so students have zero confusion about packages, folders, or classpaths:
+
+```text
+Mini_Project_Reference/
+├── StudentAttendanceApp.java   <-- The ONLY file you need to read, modify, and submit
+├── compile_and_run.bat         <-- Double-click to compile and run on Windows
+├── compile_and_run.ps1         <-- PowerShell runner
+├── compile_and_run.sh          <-- Linux / macOS runner
+├── README.md                   <-- Guide and viva questions
+├── assets/
+│   └── screenshot.png          # Screenshot of running GUI
+├── db/
+│   ├── schema_postgresql.sql   # PostgreSQL table creation script
+│   ├── schema_mysql.sql        # MySQL table creation script
+│   └── seed_data.sql           # Sample data rows for testing
+└── lib/
+    ├── postgresql.jar          # PostgreSQL JDBC Driver
+    └── mysql-connector-j.jar   # MySQL JDBC Driver
+```
 
 ---
 
-## 🚀 Overview & Features
+## 🚀 Key Features
 
-* **Desktop GUI Interface:** Built with clean, native Java Swing layouts (`BorderLayout`, `GridBagLayout`, `GridLayout`, and `FlowLayout`) providing an ergonomic two-pane workflow.
+* **Single-File Simplicity:** The entire program—GUI layout, event handling, and database CRUD—resides in `StudentAttendanceApp.java` (approx. 200–250 lines of clean, well-commented code).
 * **Full CRUD Operations:**
-  * **Create (Insert):** Adds new attendance records with real-time field validation.
-  * **Read (Search & Filter):** Query records instantly by Primary Key ID or filter live records in real-time across student names and course codes.
-  * **Update:** Modify existing attendance numbers, recalculate attendance percentage dynamically, and update records with confirmation guards.
-  * **Delete:** Remove records safely using confirmation dialogs.
-* **Live Interactive Table (`JTable`):** Displays all database records with custom status rendering (Green for **Eligible**, Red for **Attendance Shortage**). Clicking any row automatically populates the form for rapid editing.
-* **Dynamic Analytics & Status Bar:** Real-time counters showing Total Records, Eligible Count, Shortage Count ($< 75\%$), and live database connection health.
-* **Modular 3-Tier Architecture:** Complete separation of concerns between Model (POJO), Data Access Object (DAO), Configuration, and Presentation (UI).
-* **Self-Contained Edition Included:** Includes both modular source code (`src/`) and a single-file edition (`standalone/StudentAttendanceApp.java`) for flexible submission needs.
+  * **Insert / Save:** Reads form fields, validates inputs, and inserts records using `PreparedStatement`.
+  * **Search by ID:** Finds a record by Primary Key ID, populates the fields, and highlights the matching table row.
+  * **Update Record:** Modifies details of an existing record with a confirmation prompt.
+  * **Delete Record:** Deletes a record by Primary Key with confirmation guard.
+  * **Clear Form:** Resets all input boxes.
+* **Live Interactive Table (`JTable`):** Displays all records from the database. Clicking any row in the table automatically loads that student's details into the form for editing.
+* **Real-Time Dynamic Attendance %:** As you type the number of classes attended, the system instantly recalculates the percentage and updates the **Eligibility Status** badge (Green for $\ge 75\%$, Red for $< 75\%$).
+* **Automatic Table Creation:** The program automatically runs `CREATE TABLE IF NOT EXISTS` upon launch, so you don't even need to manually create the table first.
 
 ---
 
-## 🏗️ System Architecture
+## 🗄️ Database Schema & DDL
 
-The application adopts a decoupled **Model-View-Controller (MVC) / DAO** desktop architecture:
-
-```mermaid
-graph TD
-    subgraph Presentation_Layer [1. Presentation Layer (Swing GUI)]
-        UI[StudentAttendanceUI Window]
-        FORM[Form Inputs & Key Listeners]
-        TBL[Interactive JTable with Row Selection]
-        BAR[Live Status & Summary Counters]
-    end
-
-    subgraph Business_Logic [2. Business & Validation Layer]
-        VAL{Input Validation & Type Checking}
-        CALC[Attendance % & Status Calculator]
-        MODEL[StudentAttendance Entity Bean]
-    end
-
-    subgraph Data_Access_Layer [3. Data Access Layer (JDBC)]
-        DAO[StudentAttendanceDAO Interface]
-        PSTMT[PreparedStatement Parameterized SQL]
-        CONN[DatabaseConfig Connection Manager]
-    end
-
-    subgraph Storage_Engine [4. Relational Database Engine]
-        DB[(PostgreSQL / MySQL on localhost)]
-        TBL_DATA[student_attendance Table]
-    end
-
-    UI --> FORM
-    UI --> TBL
-    FORM -->|User Input| VAL
-    VAL -->|Valid Data| CALC
-    CALC --> MODEL
-    MODEL --> DAO
-    DAO --> PSTMT
-    CONN --> PSTMT
-    PSTMT -->|Execute SQL| DB
-    DB --> TBL_DATA
-    TBL_DATA -->|ResultSet| DAO
-    DAO -->|Mapped Entities| TBL
-    DAO -->|Aggregates| BAR
-```
-
----
-
-## 🗄️ Database Schema & ER Design
-
-### Entity-Relationship Diagram
-
-```mermaid
-erDiagram
-    STUDENT_ATTENDANCE {
-        int attendance_id PK "Unique identifier / Primary Key"
-        varchar student_name "Full name of student"
-        varchar course_code "Course identifier e.g. BCA301"
-        int attended_classes "Classes attended"
-        int total_classes "Total classes conducted (default 50)"
-        varchar status "Eligible or Attendance Shortage"
-    }
-```
-
-### Table Definition (PostgreSQL / MySQL)
+### PostgreSQL / MySQL Table Definition
 
 ```sql
 CREATE TABLE IF NOT EXISTS student_attendance (
     attendance_id INT PRIMARY KEY,
     student_name VARCHAR(100) NOT NULL,
     course_code VARCHAR(20) NOT NULL,
-    attended_classes INT NOT NULL CHECK (attended_classes >= 0),
-    total_classes INT NOT NULL DEFAULT 50 CHECK (total_classes > 0),
+    attended_classes INT NOT NULL,
+    total_classes INT NOT NULL DEFAULT 50,
     status VARCHAR(30) NOT NULL
 );
-
--- Performance Indexes
-CREATE INDEX IF NOT EXISTS idx_student_name ON student_attendance(student_name);
-CREATE INDEX IF NOT EXISTS idx_course_code ON student_attendance(course_code);
-CREATE INDEX IF NOT EXISTS idx_status ON student_attendance(status);
 ```
 
 ---
 
-## 📁 Project Directory Structure
+## 🛠️ How to Run
 
-```text
-Mini_Project_Reference/
-├── .gitignore                      # Git exclusion rules (ignores .class, bin/)
-├── compile_and_run.bat             # 1-Click build & execution script for Windows CMD
-├── compile_and_run.ps1             # 1-Click build & execution script for PowerShell
-├── compile_and_run.sh              # 1-Click build & execution script for Linux/macOS
-├── README.md                       # Complete documentation with embedded screenshots
-├── assets/
-│   └── screenshot.png              # High-resolution screenshot of the running UI
-├── db/
-│   ├── schema_postgresql.sql       # PostgreSQL DDL table script
-│   ├── schema_mysql.sql            # MySQL DDL table script
-│   └── seed_data.sql               # Initial sample data for testing
-├── lib/
-│   ├── postgresql.jar              # PostgreSQL JDBC Driver 42.x
-│   └── mysql-connector-j.jar       # MySQL Connector/J JDBC Driver 8.x
-├── standalone/
-│   └── StudentAttendanceApp.java   # Single-file runnable reference edition
-└── src/
-    ├── Main.java                   # Main entry point launching on Swing EDT
-    ├── config/
-    │   └── DatabaseConfig.java     # Connection factory & auto-schema initializer
-    ├── model/
-    │   └── StudentAttendance.java  # Entity model with getters/setters & business rules
-    ├── dao/
-    │   └── StudentAttendanceDAO.java # Parameterized JDBC CRUD implementations
-    └── ui/
-        └── StudentAttendanceUI.java  # Two-pane modern Swing desktop interface
-```
+### Method 1: 1-Click Runner (Easiest)
+* **Windows:** Simply double-click **`compile_and_run.bat`** (or run `.\compile_and_run.ps1` in PowerShell).
+* **Linux / Mac:** Run `./compile_and_run.sh` in terminal.
 
 ---
 
-## 🔒 Cybersecurity & Defensive Engineering
+### Method 2: Command Line (Manual)
 
-| Threat / Vulnerability | Risk | Implemented Defensive Measure |
-| :--- | :--- | :--- |
-| **SQL Injection (SQLi)** | Attackers inject arbitrary SQL queries via input boxes to alter or extract records. | **Strict PreparedStatement Parameterization:** All queries use `?` placeholders. User input is never concatenated into raw SQL strings. |
-| **Application Crash (Bad Inputs)** | Non-numeric inputs entered into ID or numeric fields cause unhandled runtime exceptions. | **Input Validation & Exception Trapping:** Explicit regex and `try-catch (NumberFormatException)` wrapping. Visual alerts via `JOptionPane` without crashing. |
-| **Connection & Socket Leaks** | Abandoned database sockets exhaust database connection pool. | **Automatic Resource Cleanup:** Implemented using Java 7+ `try-with-resources` (`AutoCloseable`). Connections, statements, and result sets are guaranteed to close immediately upon exiting. |
-| **GUI Freeze / Thread Starvation** | Creating Swing components on worker threads leads to UI freezing or race conditions. | **Event Dispatch Thread (EDT) Safety:** Frame initialization and updates are dispatched via `SwingUtilities.invokeLater()`. |
-
----
-
-## ⚙️ Prerequisites & Requirements
-
-* **Java Development Kit (JDK):** Version 11, 17 LTS, or 21+ (`javac` and `java` on system `PATH`).
-* **Database Engine:** PostgreSQL (running on `localhost:5432`) **OR** MySQL (running on `localhost:3306`).
-* **JDBC Driver:** Included in the `lib/` directory (`postgresql.jar` and `mysql-connector-j.jar`).
-
----
-
-## 🛠️ Step-by-Step Setup & Execution
-
-### Option 1: 1-Click Runner (Fastest)
-
-#### On Windows (Command Prompt or File Explorer):
-Double-click `compile_and_run.bat` or run:
-```cmd
-compile_and_run.bat
-```
-
-#### On Windows (PowerShell):
-```powershell
-.\compile_and_run.ps1
-```
-
-#### On Linux / macOS:
-```bash
-chmod +x compile_and_run.sh
-./compile_and_run.sh
-```
-
----
-
-### Option 2: Manual Compilation from Command Line
+Open terminal / command prompt in this directory:
 
 ```cmd
-# 1. Navigate to the project root directory
-cd Mini_Project_Reference
+# 1. Compile
+javac -cp ".;lib/*" StudentAttendanceApp.java
 
-# 2. Create output directory
-mkdir bin
-
-# 3. Compile all source files
-javac -cp ".;lib/*" -d bin src/config/*.java src/model/*.java src/dao/*.java src/ui/*.java src/Main.java
-
-# 4. Run the application
-java -cp "bin;lib/*" Main
+# 2. Run
+java -cp ".;lib/*" StudentAttendanceApp
 ```
+
+*(On Linux / macOS, use a colon `:` instead of a semicolon `;` for the classpath: `javac -cp ".:lib/*" StudentAttendanceApp.java`)*
 
 ---
 
-### Option 3: Running the Standalone Single-File Edition
-
-If you need to test or demonstrate using a single self-contained file:
-```cmd
-# Compile
-javac -cp ".;lib/*" -d bin standalone/StudentAttendanceApp.java
-
-# Run
-java -cp "bin;lib/*" StudentAttendanceApp
-```
+### Method 3: In VS Code / Eclipse
+1. Open this folder in your IDE.
+2. Add `lib/postgresql.jar` (or `mysql-connector-j.jar`) to **Referenced Libraries** / **Build Path**.
+3. Open `StudentAttendanceApp.java` and click **Run**.
 
 ---
 
-## 💡 Component & Code Documentation
+## 🔒 Cybersecurity & Best Practices
 
-### 1. `DatabaseConfig.java`
-Centralizes connection parameters and provides a helper method `initializeDatabase()` that automatically executes `CREATE TABLE IF NOT EXISTS`, ensuring the table is created automatically on first run.
+1. **SQL Injection Prevention:**
+   All queries use `PreparedStatement` with parameterized placeholders (`?`). User inputs are never directly concatenated into SQL strings.
+   ```java
+   // SAFE: Parameterized query
+   String sql = "INSERT INTO student_attendance VALUES (?, ?, ?, ?, ?, ?)";
+   PreparedStatement pstmt = conn.prepareStatement(sql);
+   pstmt.setInt(1, id);
+   pstmt.setString(2, name);
+   ```
 
-```java
-public static Connection getConnection() throws SQLException {
-    return DriverManager.getConnection(URL, USER, PASS);
-}
-```
+2. **Input Validation & Exception Trapping:**
+   * Non-empty field validation prevents blank records.
+   * `NumberFormatException` is trapped so entering text in ID or numeric fields displays a friendly dialog rather than crashing the program.
+   * `SQLException` is caught and displayed via `JOptionPane.showMessageDialog`.
 
-### 2. `StudentAttendanceDAO.java`
-Encapsulates all database interactions into modular, reusable methods:
-* `boolean insert(StudentAttendance record)`: Inserts a record.
-* `StudentAttendance findById(int id)`: Fetches a single student by Primary Key.
-* `boolean update(StudentAttendance record)`: Updates student information.
-* `boolean delete(int id)`: Deletes record by Primary Key.
-* `List<StudentAttendance> findAll()`: Retrieves all records ordered by ID.
-* `List<StudentAttendance> search(String keyword)`: Matches by name or course code.
+3. **Automatic Resource Cleanup:**
+   Every database operation uses Java 7+ `try-with-resources`:
+   ```java
+   try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+       // Resources are automatically closed when this block exits!
+   }
+   ```
+
+4. **Thread Safety in Swing:**
+   GUI initialization is always dispatched onto the Event Dispatch Thread (EDT) via `SwingUtilities.invokeLater()`.
 
 ---
 
-## 🎓 Viva-Voce Questions with Model Answers
+## 📝 How Students Adapt This to Their Assigned Project Topic
 
-### Q1. What are the key stages in establishing a JDBC connection?
+Every student has been assigned a specific domain (e.g., *Library, Hospital, Pharmacy, Bus Route, Supermarket, Bank*). To customize this template for your topic:
+
+1. **Change the Class & File Name:**
+   * Rename `StudentAttendanceApp.java` to match your assignment: `<USN>_<ProjectTitle>.java` (e.g., `25UG00232_LibraryBookApp.java`).
+   * Update the class name inside the file: `public class 25UG00232_LibraryBookApp extends JFrame { ... }`.
+2. **Update Database Table & Column Names:**
+   * Modify the SQL `CREATE TABLE`, `INSERT`, `SELECT`, `UPDATE`, and `DELETE` queries to match your assigned table (e.g., `library_books`).
+3. **Update Text Fields & Labels:**
+   * Change `txtCourse`, `txtAttended` to match your columns (e.g., `txtAuthor`, `txtPrice`).
+   * Rename `JLabel` text strings.
+4. **Update Table Column Headers:**
+   * Adjust the `String[] columns = { ... }` array for the `JTable`.
+5. **Compile and Test:**
+   * Run `compile_and_run.bat` to verify your changes!
+
+---
+
+## 🎓 Top 10 Viva-Voce Questions with Answers
+
+### Q1. What are the steps involved in executing a JDBC program?
 **Answer:**
-1. Load the database driver (automatically handled via JDBC 4+ SPI).
-2. Establish connection using `DriverManager.getConnection(url, username, password)`.
-3. Create a `PreparedStatement` with parameterized SQL.
-4. Execute the statement using `executeUpdate()` (for DML) or `executeQuery()` (for SELECT).
-5. Process the `ResultSet` if data is returned.
-6. Close the connection and associated resources using `try-with-resources`.
+1. Load database driver (automatic in JDBC 4+).
+2. Create connection using `DriverManager.getConnection(url, user, pass)`.
+3. Create `PreparedStatement` with parameterized SQL.
+4. Execute query using `executeUpdate()` (for INSERT/UPDATE/DELETE) or `executeQuery()` (for SELECT).
+5. Process `ResultSet` (for queries).
+6. Close connection and statements (handled automatically by `try-with-resources`).
 
-### Q2. Why must we use `PreparedStatement` instead of `Statement`?
+### Q2. Why is `PreparedStatement` preferred over `Statement`?
 **Answer:**
-1. **Security:** `PreparedStatement` uses parameter placeholders (`?`), ensuring user input is treated strictly as data literals and completely preventing SQL Injection attacks.
-2. **Performance:** Pre-compiled once by the database engine, reducing execution overhead for repeated calls.
+1. **Security:** It prevents SQL Injection by escaping input values through placeholders (`?`).
+2. **Performance:** The SQL statement is pre-compiled by the database engine.
 
 ### Q3. What is the difference between `executeUpdate()` and `executeQuery()`?
 **Answer:**
-* `executeUpdate()` is used for DDL and DML operations (`INSERT`, `UPDATE`, `DELETE`, `CREATE TABLE`). It returns an integer representing the count of rows affected.
-* `executeQuery()` is used exclusively for `SELECT` queries and returns a `ResultSet` object containing the fetched records.
+* `executeUpdate()` is used for DML statements (`INSERT`, `UPDATE`, `DELETE`) and returns the number of rows affected.
+* `executeQuery()` is used for `SELECT` statements and returns a `ResultSet` containing matching rows.
 
-### Q4. How does `ResultSet.next()` navigate database records?
+### Q4. What is the purpose of `ResultSet.next()`?
 **Answer:**
-When a `ResultSet` is initially created, its cursor is placed before the first row. `rs.next()` moves the cursor forward to the next row. It returns `true` if a row exists, and `false` when the end of the result set is reached.
+The cursor initially sits before the first row. `rs.next()` advances the cursor to the next row and returns `true` if a row exists, or `false` when there are no more rows.
 
-### Q5. What is the purpose of `try-with-resources` in JDBC?
+### Q5. What is the role of `LayoutManager` in Swing?
 **Answer:**
-Database connections and statements consume operating system sockets. Wrapping them in `try-with-resources` (`AutoCloseable`) guarantees that they are closed automatically upon block exit—even if an exception occurs—preventing resource leaks and connection exhaustion.
+A `LayoutManager` automatically calculates the size and position of components inside a container (`JFrame`, `JPanel`) across different screen sizes and operating systems. Common layout managers include `BorderLayout`, `GridLayout`, and `FlowLayout`.
 
-### Q6. What is the role of `SwingUtilities.invokeLater()`?
+### Q6. How does an `ActionListener` work?
 **Answer:**
-Java Swing is not thread-safe. `SwingUtilities.invokeLater()` submits GUI construction and rendering tasks to the Event Dispatch Thread (EDT), ensuring thread safety and preventing UI race conditions or visual glitches.
+`ActionListener` is an interface with one method: `actionPerformed(ActionEvent e)`. When a user clicks a `JButton`, the button fires an `ActionEvent` and triggers the registered listener code.
 
----
+### Q7. What is `try-with-resources` and why is it used in JDBC?
+**Answer:**
+It ensures that database `Connection`, `PreparedStatement`, and `ResultSet` objects are closed automatically as soon as the try block finishes, preventing database connection leaks.
 
-## 📝 Student Customization Checklist
+### Q8. What is the difference between AWT and Swing?
+**Answer:**
+* **AWT:** Heavyweight components dependent on the underlying operating system's native windowing peers.
+* **Swing:** Lightweight components written 100% in Java (`javax.swing.*`), platform-independent with customizable look and feel.
 
-To adapt this reference project to your assigned domain (e.g., Library, Hospital, Pharmacy, Banking):
+### Q9. Which exception is caught when a user types text into a numeric field?
+**Answer:**
+`NumberFormatException`. It is thrown by `Integer.parseInt()` or `Double.parseDouble()` when the input string cannot be parsed into a number.
 
-1. **Update Table Name & Attributes:**
-   * Open `db/schema_postgresql.sql` or `db/schema_mysql.sql`.
-   * Replace `student_attendance` with your assigned table name (e.g., `library_books`).
-   * Update column names and types to match your assigned specifications.
-2. **Update Entity Model (`model/StudentAttendance.java`):**
-   * Change field names, getters, setters, and constructors to reflect your domain attributes.
-3. **Update DAO Layer (`dao/StudentAttendanceDAO.java`):**
-   * Adjust SQL `INSERT`, `SELECT`, `UPDATE`, and `DELETE` queries to match your table columns.
-4. **Update GUI Labels & Form Fields (`ui/StudentAttendanceUI.java`):**
-   * Rename `JLabels`, text fields, window title, and `JTable` column headers.
-5. **Recompile and Run:**
-   * Execute `compile_and_run.bat` or `compile_and_run.ps1` to test your application.
-
----
-
-## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
+### Q10. Why do we wrap GUI startup in `SwingUtilities.invokeLater()`?
+**Answer:**
+Swing components are not thread-safe. `SwingUtilities.invokeLater()` ensures that the GUI is constructed and updated on the Event Dispatch Thread (EDT), preventing UI flickering and concurrency race conditions.
